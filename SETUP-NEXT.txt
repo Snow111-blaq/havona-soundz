@@ -1,0 +1,16 @@
+HAVONA SOUNDZ — NEXT IMPLEMENTATION STEP
+
+This folder prepares the database outline; it does not create a live account system by itself.
+
+Recommended stack: Supabase Auth + Postgres + private Storage buckets, with server-side role checks.
+Official docs: https://supabase.com/docs/guides/auth
+
+1. Create a Supabase account and a new project under your own email. Keep ownership of this account.
+2. In the project SQL Editor, review and run schema.sql.
+3. Configure email verification, password reset, rate limits, and MFA for the owner.
+4. Create your first user through the Auth signup flow, then use a trusted server-side/admin process to assign the owner role. Never expose a service-role/secret key in index.html.
+5. Implement server-side authorization for owner-only actions and test that ordinary users cannot change their role or approve releases.
+6. Create private audio/artwork Storage buckets and policies. Validate file type, size, rights confirmation, and approval status before public playback.
+7. Configure HTTPS hosting and environment variables. Test recovery, deletion/export requests, audit logs, backups, and mobile display before launch.
+
+Never share passwords, recovery codes, or secret API keys in chat. The current index.html remains a visual prototype until these services are configured and connected.
