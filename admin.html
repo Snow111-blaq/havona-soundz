@@ -1,2 +1,374 @@
-const SUPABASE_URL = 'https://ksjhvrwkezmpqcwupozm.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_-htV_w6s2PDlcQm-QMKzgg_12_OONVi';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d1d">
+  <title>Havona Soundz | Owner Dashboard</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #090d1d;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 25px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #17264b, #101426, #26183e);
+      border-bottom: 1px solid #d8b66a;
+    }
+
+    header h1 {
+      margin: 0;
+      color: #e6c477;
+      letter-spacing: 3px;
+      font-size: 27px;
+    }
+
+    header p { color: #c7cce0; }
+
+    main {
+      width: 100%;
+      max-width: 700px;
+      margin: 25px auto;
+      padding: 15px;
+    }
+
+    .card {
+      background: #141b30;
+      border: 1px solid #293653;
+      border-radius: 15px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    h2 { color: #e6c477; }
+
+    .description {
+      color: #bdc8df;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 6px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 13px;
+      margin: 5px 0;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    input {
+      background: #090d1d;
+      color: #fff;
+      border: 1px solid #465576;
+    }
+
+    button {
+      border: none;
+      background: linear-gradient(90deg, #e6c477, #cba354);
+      color: #101426;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .secondary {
+      background: #273451;
+      color: #fff;
+      border: 1px solid #526284;
+    }
+
+    #dashboard { display: none; }
+
+    .note {
+      color: #aebbd5;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      color: #9ba8c5;
+      padding: 20px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>HAVONA SOUNDZ</h1>
+    <p>Owner Dashboard · Music Unites Us</p>
+  </header>
+
+  <main>
+    <section class="card" id="login">
+      <h2>Owner Login</h2>
+
+      <p class="description">
+        Welcome to your private Havona Soundz administration area.
+        Sign in with your authorized owner account.
+      </p>
+
+      <form id="loginForm">
+        <label for="email">Owner Email</label>
+        <input id="email" type="email"
+          placeholder="Enter your owner email"
+          autocomplete="username" required>
+
+        <label for="password">Password</label>
+        <input id="password" type="password"
+          placeholder="Enter your password"
+          autocomplete="current-password" required>
+
+        <button id="loginButton" type="submit">Sign In</button>
+      </form>
+    </section>
+
+    <section class="card" id="dashboard">
+      <h2>Owner Control Centre 👑</h2>
+      <p id="welcome" class="description"></p>
+
+      <h3>Music Management</h3>
+
+      <p class="description">
+        Manage your music releases from one place. Actual music uploads
+        will be enabled after secure storage and database permissions
+        are configured.
+      </p>
+
+      <form id="uploadForm">
+        <label for="songTitle">Song Title</label>
+        <input id="songTitle" type="text"
+          placeholder="Enter song title" required>
+
+        <label for="artistName">Artist Name</label>
+        <input id="artistName" type="text"
+          placeholder="Enter artist name" required>
+
+        <label for="audioFile">Audio File</label>
+        <input id="audioFile" type="file"
+          accept="audio/*" required>
+
+        <label for="coverFile">Cover Artwork (Optional)</label>
+        <input id="coverFile" type="file" accept="image/*">
+
+        <button type="submit">Prepare Music Release</button>
+      </form>
+
+      <button id="logoutButton" class="secondary" type="button">
+        Sign Out
+      </button>
+    </section>
+
+    <section class="card">
+      <h2>System Status</h2>
+      <p id="status" class="description" aria-live="polite">
+        Connecting to Havona Soundz services...
+      </p>
+    </section>
+
+    <p class="note">
+      Keep your owner password private. Never put a Supabase secret
+      key or service_role key in this file.
+    </p>
+  </main>
+
+  <footer>HAVONA SOUNDZ · Music Unites Us</footer>
+
+  <script type="module">
+    import { createClient } from
+      'https://esm.sh/@supabase/supabase-js@2';
+
+    // Havona Soundz Supabase connection
+    const SUPABASE_URL =
+      'https://ksjhvrwkezmpqcwupozm.supabase.co';
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      'sb_publishable_-htV_w6s2PDlcQm-QMKzgg_12_OONVi';
+
+    const loginSection = document.getElementById('login');
+    const dashboardSection = document.getElementById('dashboard');
+    const status = document.getElementById('status');
+    const loginButton = document.getElementById('loginButton');
+
+    let supabase;
+
+    function showStatus(message) {
+      status.textContent = message;
+    }
+
+    function showLogin() {
+      loginSection.style.display = 'block';
+      dashboardSection.style.display = 'none';
+    }
+
+    function showDashboard(profile, email) {
+      loginSection.style.display = 'none';
+      dashboardSection.style.display = 'block';
+
+      document.getElementById('welcome').textContent =
+        'Signed in as ' + (profile.display_name || email) +
+        '. Your account has the owner role.';
+    }
+
+    async function checkOwnerSession() {
+      const { data, error: sessionError } =
+        await supabase.auth.getSession();
+
+      if (sessionError) {
+        showLogin();
+        showStatus('Unable to check your session. Please sign in again.');
+        return;
+      }
+
+      const session = data.session;
+
+      if (!session) {
+        showLogin();
+        showStatus('Connection initialized. Please sign in.');
+        return;
+      }
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('display_name, role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (error) {
+        showLogin();
+        showStatus(
+          'Could not verify your owner profile. Database permissions ' +
+          'may need configuration.'
+        );
+        return;
+      }
+
+      if (!profile || profile.role !== 'owner') {
+        await supabase.auth.signOut();
+        showLogin();
+        showStatus(
+          'Access denied. An authorized owner account is required.'
+        );
+        return;
+      }
+
+      showDashboard(profile, session.user.email);
+
+      showStatus(
+        'Owner verified. Music storage and publishing still need setup.'
+      );
+    }
+
+    async function initialize() {
+      showStatus('Connecting to Supabase...');
+
+      try {
+        supabase = createClient(
+          SUPABASE_URL,
+          SUPABASE_PUBLISHABLE_KEY
+        );
+
+        await checkOwnerSession();
+      } catch (error) {
+        showLogin();
+        showStatus(
+          'Connection failed. Check your internet connection and ' +
+          'Supabase configuration.'
+        );
+      }
+    }
+
+    document.getElementById('loginForm').addEventListener(
+      'submit',
+      async function(event) {
+        event.preventDefault();
+
+        if (!supabase) {
+          showStatus('Supabase is not connected. Reload the page and try again.');
+          return;
+        }
+
+        loginButton.disabled = true;
+        loginButton.textContent = 'Signing In...';
+        showStatus('Checking your login details...');
+
+        try {
+          const email =
+            document.getElementById('email').value.trim();
+
+          const password =
+            document.getElementById('password').value;
+
+          const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+
+          if (error) {
+            showStatus('Sign-in failed: ' + error.message);
+            return;
+          }
+
+          await checkOwnerSession();
+        } catch (error) {
+          showStatus('A connection error occurred. Please try again.');
+        } finally {
+          loginButton.disabled = false;
+          loginButton.textContent = 'Sign In';
+        }
+      }
+    );
+
+    document.getElementById('logoutButton').addEventListener(
+      'click',
+      async function() {
+        if (!supabase) return;
+
+        const { error } = await supabase.auth.signOut();
+
+        showLogin();
+
+        showStatus(
+          error
+            ? 'Sign-out failed. Please try again.'
+            : 'You have signed out successfully.'
+        );
+      }
+    );
+
+    document.getElementById('uploadForm').addEventListener(
+      'submit',
+      function(event) {
+        event.preventDefault();
+
+        showStatus(
+          'Music uploading is not enabled yet. Secure storage, upload ' +
+          'permissions, and database saving must be configured first.'
+        );
+      }
+    );
+
+    initialize();
+  </script>
+</body>
+  </html>
